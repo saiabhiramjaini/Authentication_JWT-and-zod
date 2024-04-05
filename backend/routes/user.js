@@ -117,13 +117,17 @@ router.post("/forgot-password", async (req, res) => {
 // Reset Password Route
 router.post("/reset-password/:token", async (req, res) => {
     try {
-        const { token } = req.params;
-        const { password, cPassword } = resetPasswordSchema.parse(req.body);
+        const {password, cPassword} = resetPasswordSchema.parse(req.body);
+        const user = req.user;
 
-        // Decode token to get email
-        const decode = jwt.verify(token, process.env.SECRET);
-        const email = decode.email;
+        if (!user) {
+            return res.status(401).json({ msg: 'Unauthorized' });
+        }
 
+        if (password !== cPassword) {
+            return res.json({ msg: "Passwords do not match" });
+        }
+        
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
